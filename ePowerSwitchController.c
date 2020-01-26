@@ -38,23 +38,25 @@ void writeDataToePowerSwitch();
 
 void processAllChannels()
 {
+	processEmergencyButton(&mushroom);
 	retrieveDataFromePowerSwitch();
 	handleSerialError();
 	for (uint8_t i = 0; i < NUM_CHANNELS; ++i)
 	{
 		processChannel(&channels[i]);
 	}
-//	if (checkEmergencyFlag(&mushroom))
-//	{
-//		clearEmergencyFlag(&mushroom);
-//		for (uint8_t i = 0; i < NUM_CHANNELS; ++i)
-//		{
-//			setePowerSwitchChannelFlag(channels[i].number, 0); // OFF
-//			channels[i].nextButtonStatus = 0;
-//			forceRelease(&channels[i].physicalButton);
-//		}
-//		setEmergencyStopLeds();
-//	}
+	if (checkEmergencyFlag(&mushroom))
+	{
+		clearEmergencyFlag(&mushroom);
+		for (uint8_t i = 0; i < NUM_CHANNELS; ++i)
+		{
+			setePowerSwitchChannelFlag(channels[i].number, 0); // OFF
+			channels[i].nextButtonStatus = 0;
+			forceRelease(&channels[i].physicalButton);
+			pendingUpdate = 0xFF;
+		}
+		setEmergencyStopLeds();
+	}
 	writeDataToePowerSwitch();
 	handleSerialError();
 }

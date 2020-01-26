@@ -39,6 +39,7 @@ int main()
 		processAllChannels();
 		timer0UpdateTimer(&delayTimer, TIMER_SET, 100);
 		while(!timer0UpdateTimer(&delayTimer, TIMER_CHECK_MATCH, 0));
+		timer0UpdateTimer(&delayTimer, TIMER_RESET, 0);
 	}
 }
 

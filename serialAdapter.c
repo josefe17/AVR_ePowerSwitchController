@@ -9,6 +9,21 @@
 #include "serialAdapter.h"
 #include "UART2.h"
 #include <util/delay.h>
+#include "timer0_tick.h"
+
+const uint8_t LONG_DELAY = 10;
+const uint8_t SHORT_DELAY = 5;
+TickTimerEntity readDelayTimer;
+
+void readDelay(uint8_t delay, uint8_t requiredDataLength);
+
+// Delay to wait for EPSW to process command and return data
+void readDelay(uint8_t delay, uint8_t requiredDataLength)
+{
+	timer0UpdateTimer(&readDelayTimer, TIMER_SET, delay);
+	while((!timer0UpdateTimer(&readDelayTimer, TIMER_CHECK_MATCH, 0)) && UART2_receiveAvailable() < requiredDataLength);
+	timer0UpdateTimer(&readDelayTimer, TIMER_RESET, 0);
+}
 
 uint8_t readePowerSwitchState()
 {
@@ -31,8 +46,9 @@ uint8_t readePowerSwitchState()
 	{
 		return TRANSMISSION_ERROR; //Failed
 	}
-	_delay_ms(10);
 	// Receive data
+	//_delay_ms(10);
+	readDelay(LONG_DELAY, 34);
 	if(!(UART2_receiveAvailable() >= 2))
 	{
 		return RECEPTION_BAD_COUNT;
@@ -76,7 +92,8 @@ uint8_t writeePowerSwitchState(uint8_t swMask)
 		return TRANSMISSION_ERROR; //Failed
 	}
 	// Check CTS
-	_delay_ms(10);
+	//_delay_ms(10);
+	readDelay(SHORT_DELAY, 1);
 	if(UART2_receiveAvailable() != 1)
 	{
 		return RECEPTION_BAD_COUNT;
@@ -102,7 +119,8 @@ uint8_t writeePowerSwitchState(uint8_t swMask)
 		}
 	}
 	// Check data
-	_delay_ms(10);
+	//_delay_ms(10);
+	readDelay(LONG_DELAY, 2);
 	if(UART2_receiveAvailable() != 2)
 	{
 		return RECEPTION_BAD_COUNT;
@@ -137,7 +155,8 @@ uint8_t writeePowerSwitchState(uint8_t swMask)
 		return TRANSMISSION_ERROR; //Failed
 	}
 	// Check CTS
-	_delay_ms(10);
+	//_delay_ms(10);
+	readDelay(SHORT_DELAY + 1, 1);
 	if(UART2_receiveAvailable() != 1)
 	{
 		return RECEPTION_BAD_COUNT;
