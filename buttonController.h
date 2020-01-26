@@ -11,7 +11,7 @@
 #include <avr/io.h>
 #include "timer0_tick.h"
 
-#define DEFAULT_PRESSED_TIMEOUT_MS 250
+#define DEFAULT_PRESSED_TIMEOUT_MS 20
 #define LONG_PRESSED_TIMEOUT_MS 500
 #define DEFAULT_DEBOUNCE_TIMEOUT_MS 20
 
