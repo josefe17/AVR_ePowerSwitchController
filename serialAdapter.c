@@ -11,8 +11,8 @@
 #include <util/delay.h>
 #include "timer0_tick.h"
 
-const uint8_t LONG_DELAY = 10;
-const uint8_t SHORT_DELAY = 5;
+const uint8_t LONG_DELAY = 20;
+const uint8_t SHORT_DELAY = 10;
 TickTimerEntity readDelayTimer;
 
 void readDelay(uint8_t delay, uint8_t requiredDataLength);

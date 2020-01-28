@@ -50,7 +50,7 @@ void processAllChannels()
 		clearEmergencyFlag(&mushroom);
 		for (uint8_t i = 0; i < NUM_CHANNELS; ++i)
 		{
-			setePowerSwitchChannelFlag(channels[i].number, 0); // OFF
+			setePowerSwitchChannelFlag(channels[i].stripChannel, 0); // OFF
 			channels[i].nextButtonStatus = 0;
 			forceRelease(&channels[i].physicalButton);
 			pendingUpdate = 0xFF;
@@ -82,7 +82,7 @@ void processChannel(Channel* channel)
 	// then, configure button to toggle the current state, setting the shutdown
 	// longpress timeout if this mode is set
 	// process the button
-	uint8_t remoteStatus = getePowerSwitchChannelFlag(channel -> number);
+	uint8_t remoteStatus = getePowerSwitchChannelFlag(channel -> stripChannel);
 	// Level sensitive on startup
 	// State retrieved from ePowerSwitch is considered absolute
 	if (channel -> initialCycle)
@@ -143,15 +143,15 @@ void handleButtonAction(Channel* this)
 	{
 		if (this -> switchStatus) // If on
 		{
-			setePowerSwitchChannelFlag(this -> number, 0); // OFF
+			setePowerSwitchChannelFlag(this -> stripChannel, 0); // OFF
 			this -> nextButtonStatus = 0;
 			for (uint8_t i = 0; i < NUM_CHANNELS; ++i)  // If any channel is linked, also turn it off
 			{
-				if (channels[i].linkedChannel -> number == this -> number ) // goes bad
+				if (channels[i].linkedChannel == this)
 				{
 					if (channels[i].isLinked)// If that channel linking is enabled
 					{
-						setePowerSwitchChannelFlag(channels[i].number, 0);
+						setePowerSwitchChannelFlag(channels[i].stripChannel, 0);
 						channels[i]. nextButtonStatus = 0;
 						channels[i].linkedSwitched = 0xFF;
 					}
@@ -165,14 +165,14 @@ void handleButtonAction(Channel* this)
 			{
 				if ((this -> linkedChannel) -> switchStatus)
 				{
-					setePowerSwitchChannelFlag(this -> number, 1); // ON
+					setePowerSwitchChannelFlag(this -> stripChannel, 1); // ON
 					this -> nextButtonStatus = 1;
 					pendingUpdate = 0xFF;
 				}
 			}
 			else
 			{
-				setePowerSwitchChannelFlag(this -> number, 1); // ON
+				setePowerSwitchChannelFlag(this -> stripChannel, 1); // ON
 				this -> nextButtonStatus = 1;
 				pendingUpdate = 0xFF;
 			}
@@ -184,11 +184,11 @@ void handleButtonAction(Channel* this)
 		{
 			if (this -> switchStatus)
 			{
-				setePowerSwitchChannelFlag(this -> number, 1); // ON
+				setePowerSwitchChannelFlag(this -> stripChannel, 1); // ON
 			}
 			else
 			{
-				setePowerSwitchChannelFlag(this -> number, 0); // OFF
+				setePowerSwitchChannelFlag(this -> stripChannel, 0); // OFF
 			}
 		}
 		else
@@ -276,11 +276,11 @@ void handleSerialError()
 
 uint8_t getePowerSwitchChannelFlag(uint8_t channel)
 {
-	if (channel < 1 || channel > 4)
+	if (channel < 0 || channel > 3)
 	{
 		return 0;
 	}
-	if (ePowerSwitchReadStatus & _BV(channel - 1))
+	if (ePowerSwitchReadStatus & _BV(channel))
 	{
 		return 1;
 	}
@@ -289,17 +289,17 @@ uint8_t getePowerSwitchChannelFlag(uint8_t channel)
 
 uint8_t setePowerSwitchChannelFlag(uint8_t channel, uint8_t value)
 {
-	if (channel < 1 || channel > 4)
+	if (channel < 0 || channel > 3)
 	{
 		return 0xFF;
 	}
 	if (value)
 	{
-		ePowerSwitchWriteMask |= _BV(channel - 1);
+		ePowerSwitchWriteMask |= _BV(channel);
 	}
 	else
 	{
-		ePowerSwitchWriteMask &= ~_BV(channel - 1);
+		ePowerSwitchWriteMask &= ~_BV(channel);
 	}
 	return 0;
 }

@@ -60,7 +60,7 @@ uint8_t readDipSwitches()
 
 void configureChannel1()
 {
-	channels[0].number = 1;
+	channels[0].stripChannel = 0;
 	channels[0].longPressShutdownMode = 0;
 	channels[0].isLinked = 0;
 	buttonBegin(&channels[0].physicalButton, &PIND, &PORTD, &DDRD, 2);
@@ -73,7 +73,7 @@ void configureChannel1()
 
 void configureChannel2()
 {
-	channels[1].number = 2;
+	channels[1].stripChannel = 1;
 	channels[1].longPressShutdownMode = 0;
 	channels[1].isLinked = 0;
 	buttonBegin(&channels[1].physicalButton, &PIND, &PORTD, &DDRD, 3);
@@ -86,11 +86,11 @@ void configureChannel2()
 
 void configureChannel3()
 {
-	channels[2].number = 3;
+	channels[2].stripChannel = 3;
 	channels[2].longPressShutdownMode = 0;
 	channels[2].isLinked = 0;
-	buttonBegin(&channels[2].physicalButton, &PIND, &PORTD, &DDRD, 4);
-	ledBegin(&channels[2].led, &PORTB, &DDRB, 3, &PORTB, &DDRB, 0);
+	buttonBegin(&channels[2].physicalButton, &PIND, &PORTD, &DDRD, 4);//d4
+	ledBegin(&channels[2].led, &PORTB, &DDRB, 3, &PORTB, &DDRB, 0);//b3 b0
 	if (dipSwitchesMask & _BV(PC2))
 	{
 		channels[2].longPressShutdownMode = 0xFF;
@@ -99,11 +99,11 @@ void configureChannel3()
 
 void configureChannel4()
 {
-	channels[3].number = 4;
+	channels[3].stripChannel = 2;
 	channels[3].longPressShutdownMode = 0;
 	channels[3].isLinked = 0;
-	buttonBegin(&channels[3].physicalButton, &PIND, &PORTD, &DDRD, 5);
-	ledBegin(&channels[3].led, &PORTB, &DDRB, 2, &PORTB, &DDRB, 1);
+	buttonBegin(&channels[3].physicalButton, &PIND, &PORTD, &DDRD, 5); //d5
+	ledBegin(&channels[3].led, &PORTB, &DDRB, 2, &PORTB, &DDRB, 1); //b2 b1
 	if (dipSwitchesMask & _BV(PC3))
 	{
 		channels[3].longPressShutdownMode = 0xFF;
@@ -111,6 +111,6 @@ void configureChannel4()
 	if (dipSwitchesMask & _BV(PC4))
 	{
 		channels[3].isLinked = 0xFF;
-		channels[3].linkedChannel = &(channels[2]);
+		channels[3].linkedChannel = &channels[2];
 	}
 }

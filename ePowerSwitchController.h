@@ -16,7 +16,7 @@
 
 struct _channel
 {
-	uint8_t number;
+	uint8_t stripChannel;
 	ButtonData physicalButton;
 	LEDData led;
 	uint8_t switchStatus;
