@@ -23,7 +23,6 @@ void configureChannel4();
 
 int main()
 {
-	TickTimerEntity delayTimer;
 	initDipSwitches();
 	timer0TicktimerInit(T0_PRESCALER_64, MS_1_TIMER_COUNT);
 	UART2_init();
@@ -37,9 +36,7 @@ int main()
 	while(1)
 	{
 		processAllChannels();
-		timer0UpdateTimer(&delayTimer, TIMER_SET, 100);
-		while(!timer0UpdateTimer(&delayTimer, TIMER_CHECK_MATCH, 0));
-		timer0UpdateTimer(&delayTimer, TIMER_RESET, 0);
+		_delay_ms(100);
 	}
 }
 
