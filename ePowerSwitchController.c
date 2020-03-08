@@ -17,6 +17,8 @@ uint8_t ePowerSwitchWriteMask;
 // Global error flag
 uint8_t serialError;
 
+uint8_t serialErrorCounter;
+
 // A channel must be updated
 uint8_t pendingUpdate;
 
@@ -28,7 +30,7 @@ void handleButtonAction(Channel* this);
 
 void setChannelLED(Channel* channel);
 void setEmergencyStopLeds();
-void handleSerialError();
+uint8_t handleSerialError();
 
 uint8_t getePowerSwitchChannelFlag(uint8_t channel);
 uint8_t setePowerSwitchChannelFlag(uint8_t channel, uint8_t value);
@@ -40,7 +42,10 @@ void processAllChannels()
 {
 	processEmergencyButton(&mushroom);
 	retrieveDataFromePowerSwitch();
-	handleSerialError();
+//	if (handleSerialError() > NUM_RETRIES)
+//	{
+//		return;
+//	}
 	for (uint8_t i = 0; i < NUM_CHANNELS; ++i)
 	{
 		processChannel(&channels[i]);
@@ -58,7 +63,10 @@ void processAllChannels()
 		setEmergencyStopLeds();
 	}
 	writeDataToePowerSwitch();
-	handleSerialError();
+//	if (handleSerialError() > NUM_RETRIES)
+//	{
+//		return;
+//	}
 }
 
 void initePowerSwitch()
@@ -228,50 +236,57 @@ void setEmergencyStopLeds()
 	}
 }
 
-void handleSerialError()
+uint8_t handleSerialError()
 {
-	switch(serialError)
+	uint8_t serialErrorCounterBuffer = 0;
+	if (serialErrorCounter >= NUM_RETRIES)
 	{
-		case 0:
-		default:
-			return;
-		case TRANSMISSION_ERROR:
-			ledSetColor(&(channels[0].led), RED);
-			ledSetColor(&(channels[1].led), RED);
-			ledSetColor(&(channels[2].led), OFF);
-			ledSetColor(&(channels[3].led), OFF);
-			break;
-		case TRANSMISSION_FULL:
-			ledSetColor(&(channels[0].led), RED);
-			ledSetColor(&(channels[1].led), OFF);
-			ledSetColor(&(channels[2].led), OFF);
-			ledSetColor(&(channels[3].led), OFF);
-			break;
-		case TRANSMISSION_OTHER:
-			ledSetColor(&(channels[0].led), OFF);
-			ledSetColor(&(channels[1].led), RED);
-			ledSetColor(&(channels[2].led), OFF);
-			ledSetColor(&(channels[3].led), OFF);
-			break;
-		case RECEPTION_ERROR:
-			ledSetColor(&(channels[0].led), OFF);
-			ledSetColor(&(channels[1].led), OFF);
-			ledSetColor(&(channels[2].led), RED);
-			ledSetColor(&(channels[3].led), RED);
-			break;
-		case RECEPTION_BAD_COUNT:
-			ledSetColor(&(channels[0].led), OFF);
-			ledSetColor(&(channels[1].led), OFF);
-			ledSetColor(&(channels[2].led), RED);
-			ledSetColor(&(channels[3].led), OFF);
-			break;
-		case RECEPTION_WRONG_DATA:
-			ledSetColor(&(channels[0].led), OFF);
-			ledSetColor(&(channels[1].led), OFF);
-			ledSetColor(&(channels[2].led), OFF);
-			ledSetColor(&(channels[3].led), RED);
-			break;
+		serialErrorCounterBuffer = serialErrorCounter;
+		serialErrorCounter = 0;
+		switch(serialError)
+		{
+			case 0:
+			default:
+				break;
+			case TRANSMISSION_ERROR:
+				ledSetColor(&(channels[0].led), RED);
+				ledSetColor(&(channels[1].led), RED);
+				ledSetColor(&(channels[2].led), OFF);
+				ledSetColor(&(channels[3].led), OFF);
+				break;
+			case TRANSMISSION_FULL:
+				ledSetColor(&(channels[0].led), RED);
+				ledSetColor(&(channels[1].led), OFF);
+				ledSetColor(&(channels[2].led), OFF);
+				ledSetColor(&(channels[3].led), OFF);
+				break;
+			case TRANSMISSION_OTHER:
+				ledSetColor(&(channels[0].led), OFF);
+				ledSetColor(&(channels[1].led), RED);
+				ledSetColor(&(channels[2].led), OFF);
+				ledSetColor(&(channels[3].led), OFF);
+				break;
+			case RECEPTION_ERROR:
+				ledSetColor(&(channels[0].led), OFF);
+				ledSetColor(&(channels[1].led), OFF);
+				ledSetColor(&(channels[2].led), RED);
+				ledSetColor(&(channels[3].led), RED);
+				break;
+			case RECEPTION_BAD_COUNT:
+				ledSetColor(&(channels[0].led), OFF);
+				ledSetColor(&(channels[1].led), OFF);
+				ledSetColor(&(channels[2].led), RED);
+				ledSetColor(&(channels[3].led), OFF);
+				break;
+			case RECEPTION_WRONG_DATA:
+				ledSetColor(&(channels[0].led), OFF);
+				ledSetColor(&(channels[1].led), OFF);
+				ledSetColor(&(channels[2].led), OFF);
+				ledSetColor(&(channels[3].led), RED);
+				break;
+		}
 	}
+	return serialErrorCounterBuffer;
 }
 
 uint8_t getePowerSwitchChannelFlag(uint8_t channel)
@@ -310,10 +325,12 @@ void retrieveDataFromePowerSwitch()
 	if (readBuff & ERROR_MASK)
 	{
 		serialError = readBuff;
+		++serialErrorCounter;
 	}
 	else
 	{
 		serialError = 0;
+		serialErrorCounter = 0;
 		ePowerSwitchReadStatus = readBuff;
 	}
 }
@@ -326,6 +343,7 @@ void writeDataToePowerSwitch()
 		if (readBuff & ERROR_MASK)
 		{
 			serialError = readBuff;
+			++serialErrorCounter;
 		}
 		else
 		{
@@ -333,10 +351,12 @@ void writeDataToePowerSwitch()
 			if (readBuff != (ePowerSwitchWriteMask & DATA_MASK))
 			{
 				serialError = 0xFF; // Bad write feedback error
+				++serialErrorCounter;
 			}
 			else
 			{
 				serialError = 0;
+				serialErrorCounter = 0;
 				pendingUpdate = 0;
 			}
 		}
